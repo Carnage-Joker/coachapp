@@ -1,0 +1,1 @@
+# Stripe public key removed. Use an environment variable to access your API key securely.
