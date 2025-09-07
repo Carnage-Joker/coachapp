@@ -1,5 +1,8 @@
 {
   "devDependencies": {
     "emoji-regex": "^10.5.0"
+  },
+  "dependencies": {
+    "scheduler": "^0.26.0"
   }
 }
