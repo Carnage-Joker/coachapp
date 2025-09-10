@@ -23,6 +23,8 @@ import time
 from django.http import FileResponse, Http404
 from rest_framework.views import APIView
 from clients.services.profile_normalizer import normalize_client_profile
+from clients.services.generator import generate_week_plan
+from types import SimpleNamespace
 
 
 class IsOwner(permissions.BasePermission):
@@ -131,6 +133,136 @@ class ConsultViewSet(viewsets.ModelViewSet):
                 "tool_runs": result.get("tool_runs"),
             },
             status=status.HTTP_201_CREATED,
+        )
+
+    @action(detail=True, methods=["post"], url_path="generate")
+    def generate(self, request, pk=None):
+        """
+        Generate an assessment for this consult. If a client is linked, use their normalized
+        profile to build a week plan; otherwise fall back to defaults. Optionally accepts:
+        - use_llm (bool)          -> included in response metadata
+        - session_length_min (int)-> overrides session length for generation
+        Response includes a lightweight summary and a plan shaped for the assessment page.
+        """
+        consult = self.get_object()
+        data = request.data or {}
+        use_llm = bool(data.get("use_llm"))
+        try:
+            sess_len = int(data.get("session_length_min")) if data.get("session_length_min") is not None else None
+        except Exception:
+            sess_len = None
+
+        # Build a generation profile
+        profile = None
+        if getattr(consult, "client_id", None):
+            try:
+                profile = normalize_client_profile(consult.client)
+            except Exception:
+                profile = None
+        if not profile:
+            # Safe defaults for ad-hoc consults without a client
+            profile = {
+                "equipment_allowed": ["Bodyweight", "Dumbbells"],
+                "location": "Gym",
+                "space_max": "Small",
+                "impact_max": "Low",
+                "require_knee_friendly": False,
+                "require_shoulder_friendly": False,
+                "require_back_friendly": False,
+                "movement_weights": {
+                    "Squat": 1.0,
+                    "Hinge": 1.0,
+                    "Horizontal Push": 1.0,
+                    "Horizontal Pull": 1.0,
+                    "Vertical Push": 1.0,
+                    "Vertical Pull": 1.0,
+                    "Lunge": 1.0,
+                    "Core – Brace/Anti-Extension": 1.0,
+                    "Carry/Gait": 1.0,
+                    "Conditioning": 1.0,
+                },
+                "days_per_week": 3,
+                "session_length_min": 50,
+                "target_rpe": "7-9",
+                "skill_level": "Intermediate",
+                "disliked_exercises": [],
+                "liked_exercises": [],
+            }
+        if isinstance(sess_len, int) and sess_len > 0:
+            profile["session_length_min"] = sess_len
+
+        # Client object for display and progressive overload (optional)
+        client_like = getattr(consult, "client", None)
+        if not client_like:
+            client_like = SimpleNamespace(
+                preferred_name=(consult.title or "Consult"),
+                first_name="",
+                last_name="",
+                blocks=None,
+            )
+
+        # Generate a simple week plan (map of Day -> items[])
+        base = generate_week_plan(client_like, profile, save=False) or {}
+        days = base.get("plan", {}) if isinstance(base, dict) else {}
+
+        # Transform to assessment-friendly session shape: warmup/main/cooldown
+        def to_session(items):
+            warmup, main = [], []
+            for it in items or []:
+                nm = (it.get("notes") or "").lower()
+                if nm.startswith("warm-up") or nm.startswith("warmup"):
+                    warmup.append({
+                        "name": it.get("name") or it.get("exercise") or "Warm-up",
+                        "duration_min": 2,
+                    })
+                else:
+                    main.append({
+                        "Exercise": it.get("name") or it.get("exercise") or "Exercise",
+                        "Default Sets": it.get("sets") or 3,
+                        "Default Reps": it.get("reps") or 10,
+                        "Est. Time (s)": max(60, int((it.get("rest_s") or 60)) + 30) * int(it.get("sets") or 3),
+                    })
+            # Simple cooldown placeholder
+            cooldown = [
+                {"name": "Stretch & Breathing", "duration_min": 5},
+            ]
+            est_main_min = sum(max(1, round((m.get("Est. Time (s)") or 0) / 60)) for m in main)
+            est_total = sum(w.get("duration_min", 0) for w in warmup) + est_main_min + sum(c.get("duration_min", 0) for c in cooldown)
+            return {
+                "estimated_total_min": est_total,
+                "warmup": warmup,
+                "main": main,
+                "cooldown": cooldown,
+            }
+
+        plan_map = {day: to_session(items) for day, items in days.items()}
+
+        summary = (
+            f"Generated {len(plan_map)}-day plan"
+            + (f" at ~{profile.get('session_length_min')} min/session" if profile.get("session_length_min") else "")
+        )
+
+        # Persist/update assessment
+        assess, _ = Assessment.objects.update_or_create(
+            consult=consult,
+            defaults={
+                "summary": summary,
+                "plan": {"plan": plan_map},
+                "generated_at": now(),
+                "llm_provider": "openai" if use_llm else "",
+                "llm_model": "gpt-4o-mini" if use_llm else "",
+                "llm_response": None,
+                "used_llm": use_llm,
+            },
+        )
+
+        return Response(
+            {
+                "summary": assess.summary,
+                "plan": assess.plan,
+                "used_llm": assess.used_llm,
+            },
+            status=status.HTTP_200_OK,
         )
 
     @action(detail=True, methods=["post"], url_path="voice")

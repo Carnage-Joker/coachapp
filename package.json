@@ -1,0 +1,12 @@
+{
+  "name": "coachapp-root",
+  "private": true,
+  "scripts": {
+    "start:backend": ".\\.venv\\Scripts\\python.exe manage.py runserver",
+    "start:frontend": "npm --prefix frontend run dev",
+    "dev": "concurrently \"npm:start:backend\" \"npm:start:frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  }
+}
