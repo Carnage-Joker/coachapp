@@ -29,11 +29,15 @@ urlpatterns = [
     path('api/auth/token/refresh/',
          TokenRefreshView.as_view(), name='token_refresh'),
     path('api/billing/', include('billing.urls')),
+    # Consults app temporarily disabled until restored
     path('api/consults/', include('consults.urls')),
-     path('api/exercises/', include('exercises.urls')),
+    path('api/exercises/', include('exercises.urls')),
     path('api/bookings/', include('bookings.urls')),
     path('api/workouts/', include('workouts.urls')),
     path('api/templates/', include('templates.urls')),
     path('api/rules/', include('rules.urls')),
     path('api/emails/', include('emails.urls')),
 ]
+
+
+

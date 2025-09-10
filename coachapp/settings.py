@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-ln20%@lkrvkyh9v9v@%@dk2h(nyz%gv_@%(ns*2j!+nng_ox*w
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]"]
 
 
 # Application definition
@@ -41,12 +41,16 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
 
-    # Project apps
+    # Project apps (use app configs where signals are registered in ready())
     'clients.apps.ClientsConfig',
-    'billing.apps.BillingConfig',
+    'billing',
     'consults.apps.ConsultsConfig',
-    'exercises.apps.ExercisesConfig',
-    'emails.apps.EmailsConfig',
+    'exercises',
+    'emails',
+    'bookings',
+    'workouts',
+    'templates',
+    'rules',
 ]
 
 MIDDLEWARE = [
@@ -62,7 +66,7 @@ MIDDLEWARE = [
 ]
 
 
-ROOT_URLCONF = "coach.urls"
+ROOT_URLCONF = "coachapp.urls"
 
 TEMPLATES = [
     {
@@ -79,7 +83,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "coach.wsgi.application"
+WSGI_APPLICATION = "coachapp.wsgi.application"
 
 
 # Database
@@ -131,6 +135,8 @@ JWT_TTL = 90  # seconds
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -138,13 +144,7 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # CORS settings for frontend communication
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:3001",
-    "http://127.0.0.1:3001",
-]
-
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 # Django REST Framework settings
@@ -166,3 +166,10 @@ DEFAULT_FROM_EMAIL = 'no-reply@localhost'
 
 # Stripe configuration - set via environment variables in production/dev
 # STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
+
+# Feature flags
+CONSULTS_REQUIRE_PREMIUM = False  # set True in production to gate by 'premium' user group
+
+# OpenAI
+import os
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
