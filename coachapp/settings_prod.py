@@ -19,6 +19,9 @@ SECURE_HSTS_PRELOAD = False
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
 
+# Static files (collectstatic)
+STATIC_ROOT = BASE_DIR / 'static'
+
 # CORS restrict (set CORS_ALLOWED_ORIGINS csv in env)
 cors = os.environ.get('CORS_ALLOWED_ORIGINS')
 if cors:
