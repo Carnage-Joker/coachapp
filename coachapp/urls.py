@@ -16,18 +16,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-)
+from .auth_views import ThrottledTokenObtainPairView, ThrottledTokenRefreshView, LogoutView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('clients.urls')),  # mounts the clients app routes
-    path('api/auth/token/', TokenObtainPairView.as_view(),
+    path('api/auth/token/', ThrottledTokenObtainPairView.as_view(),
          name='token_obtain_pair'),
     path('api/auth/token/refresh/',
-         TokenRefreshView.as_view(), name='token_refresh'),
+         ThrottledTokenRefreshView.as_view(), name='token_refresh'),
+    path('api/auth/logout/', LogoutView.as_view(), name='token_logout'),
     path('api/billing/', include('billing.urls')),
     # Consults app temporarily disabled until restored
     path('api/consults/', include('consults.urls')),

@@ -1,0 +1,11 @@
+Django==5.2.5
+djangorestframework==3.16.1
+djangorestframework-simplejwt==5.5.1
+django-cors-headers==4.7.0
+psycopg-binary==3.2.9
+stripe==12.5.0
+coverage==7.6.10
+bandit==1.8.6
+safety==3.6.1
+sentry-sdk==2.19.2
+gunicorn==22.0.0

@@ -40,6 +40,7 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'corsheaders',
+    'rest_framework_simplejwt.token_blacklist',
 
     # Project apps (use app configs where signals are registered in ready())
     'clients.apps.ClientsConfig',
@@ -127,7 +128,15 @@ USE_I18N = True
 
 USE_TZ = True
 
-JWT_TEST_PRIVATE_KEY = open("dev-private.pem").read()
+import os
+_jwt_key = os.environ.get("JWT_TEST_PRIVATE_KEY")
+if not _jwt_key:
+    try:
+        with open("dev-private.pem", "r", encoding="utf-8") as _f:
+            _jwt_key = _f.read()
+    except Exception:
+        _jwt_key = None
+JWT_TEST_PRIVATE_KEY = _jwt_key
 JWT_ISSUER = "127.0.0.1:8000"
 JWT_AUD = "pinkbook-api"
 JWT_TTL = 90  # seconds
@@ -158,6 +167,21 @@ REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
     ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.ScopedRateThrottle',
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '60/minute',
+        'user': '1000/minute',
+        'auth': '20/minute',
+        'auth_refresh': '60/minute',
+        'email_send': '5/minute',
+        'llm': '5/minute',
+        'consults': '60/minute',
+        'clients': '120/minute',
+    },
 }
 
 # Email settings (development-safe defaults)
@@ -171,5 +195,28 @@ DEFAULT_FROM_EMAIL = 'no-reply@localhost'
 CONSULTS_REQUIRE_PREMIUM = False  # set True in production to gate by 'premium' user group
 
 # OpenAI
-import os
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+
+# Optional Sentry integration (set SENTRY_DSN to enable)
+SENTRY_DSN = os.environ.get("SENTRY_DSN")
+if SENTRY_DSN:
+    try:
+        import sentry_sdk
+        sentry_sdk.init(dsn=SENTRY_DSN, traces_sample_rate=float(os.environ.get("SENTRY_TRACES_SAMPLE_RATE", 0.0)))
+    except Exception:
+        pass
+
+# Basic logging to stdout
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+}

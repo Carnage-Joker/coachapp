@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Django tests with coverage
+        env:
+          SECRET_KEY: test-secret
+        run: |
+          coverage run manage.py test -v 2
+          coverage report -m
+      - name: Bandit static analysis
+        run: bandit -r . -x .venv,frontend,node_modules,frontend/frontend/node_modules -q
+      - name: Safety scan (non-blocking)
+        continue-on-error: true
+        run: safety scan --keyless || safety check --full-report || true

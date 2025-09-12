@@ -1,7 +1,7 @@
 from datetime import datetime
 from django.utils.timezone import now
 from django.core.mail import EmailMultiAlternatives
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, throttling
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -64,6 +64,8 @@ def plan_to_simple_html(plan: dict) -> str:
 
 class SendEmailView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [throttling.ScopedRateThrottle]
+    throttle_scope = 'email_send'
 
     def post(self, request):
         serializer = SendEmailSerializer(data=request.data)

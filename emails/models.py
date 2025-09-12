@@ -23,4 +23,4 @@ class EmailLog(models.Model):
         ordering = ("-created_at",)
 
     def __str__(self) -> str:
-        return f"{self.to_email} — {self.subject} ({self.status})"
+        return f"{self.to_email} - {self.subject} ({self.status})"

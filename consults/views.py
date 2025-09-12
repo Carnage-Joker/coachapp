@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict
 
 from django.utils.timezone import now
-from rest_framework import viewsets, permissions, status, parsers
+from rest_framework import viewsets, permissions, status, parsers, throttling
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -11,6 +11,7 @@ from .models import Consult, Message, Assessment
 from .serializers import ConsultSerializer, MessageSerializer
 from .services import ai_respond
 from django.conf import settings
+import logging
 import base64
 import tempfile
 from typing import Optional
@@ -51,6 +52,8 @@ class IsPremium(permissions.BasePermission):
 class ConsultViewSet(viewsets.ModelViewSet):
     serializer_class = ConsultSerializer
     permission_classes = [permissions.IsAuthenticated, IsPremium]
+    throttle_classes = [throttling.ScopedRateThrottle]
+    throttle_scope = 'consults'
     parser_classes = [parsers.JSONParser, parsers.MultiPartParser, parsers.FormParser]
 
     def get_queryset(self):
@@ -69,7 +72,7 @@ class ConsultViewSet(viewsets.ModelViewSet):
         qs = consult.messages.all().order_by("created_at")
         return Response(MessageSerializer(qs, many=True).data)
 
-    @action(detail=True, methods=["post"], url_path="messages")
+    @action(detail=True, methods=["post"], url_path="messages", throttle_classes=[throttling.ScopedRateThrottle], throttle_scope='llm')
     def post_message(self, request, pk=None):
         consult = self.get_object()
         text = (request.data or {}).get("text")
@@ -84,8 +87,8 @@ class ConsultViewSet(viewsets.ModelViewSet):
             try:
                 prof = normalize_client_profile(consult.client)
                 history.append({"role": "system", "content": f"Client profile context: {prof}"})
-            except Exception:
-                pass
+            except Exception as e:
+                logging.getLogger(__name__).warning("Profile context inject failed: %s", e)
         history.extend(
             {"role": m.role, "content": m.text}
             for m in consult.messages.all().order_by("created_at")
@@ -109,7 +112,8 @@ class ConsultViewSet(viewsets.ModelViewSet):
                 start = txt.index("{")
                 end = txt.rindex("}") + 1
                 plan_payload = __import__("json").loads(txt[start:end])
-        except Exception:
+        except Exception as e:
+            logging.getLogger(__name__).debug("Assistant JSON parse failed: %s", e)
             plan_payload = None
 
         if plan_payload and isinstance(plan_payload, dict):
@@ -149,7 +153,8 @@ class ConsultViewSet(viewsets.ModelViewSet):
         use_llm = bool(data.get("use_llm"))
         try:
             sess_len = int(data.get("session_length_min")) if data.get("session_length_min") is not None else None
-        except Exception:
+        except Exception as e:
+            logging.getLogger(__name__).debug("Invalid session_length_min: %s", e)
             sess_len = None
 
         # Build a generation profile
@@ -157,7 +162,8 @@ class ConsultViewSet(viewsets.ModelViewSet):
         if getattr(consult, "client_id", None):
             try:
                 profile = normalize_client_profile(consult.client)
-            except Exception:
+            except Exception as e:
+                logging.getLogger(__name__).warning("Profile normalization failed: %s", e)
                 profile = None
         if not profile:
             # Safe defaults for ad-hoc consults without a client
@@ -265,7 +271,7 @@ class ConsultViewSet(viewsets.ModelViewSet):
             status=status.HTTP_200_OK,
         )
 
-    @action(detail=True, methods=["post"], url_path="voice")
+    @action(detail=True, methods=["post"], url_path="voice", throttle_classes=[throttling.ScopedRateThrottle], throttle_scope='llm')
     def voice(self, request, pk=None):
         consult = self.get_object()
         audio = request.FILES.get("audio")
@@ -293,7 +299,7 @@ class ConsultViewSet(viewsets.ModelViewSet):
                         file=tmp,
                     )
                     transcript_text = getattr(resp, "text", None) or (resp.get("text") if isinstance(resp, dict) else None)
-                except Exception:
+                except Exception as e1:
                     # Legacy SDK fallback
                     try:
                         import openai as openai_legacy  # type: ignore
@@ -303,8 +309,12 @@ class ConsultViewSet(viewsets.ModelViewSet):
                         transcript_text = resp2.get("text") if isinstance(resp2, dict) else None
                     except Exception as e2:
                         err = str(e2)
+                        logging.getLogger(__name__).warning("Legacy transcription failed: %s", e2)
+                if not transcript_text:
+                    logging.getLogger(__name__).warning("Transcription via OpenAI SDK failed: %s", e1)
         except Exception as e:
             err = str(e)
+            logging.getLogger(__name__).warning("Voice transcript processing error: %s", e)
 
         if not transcript_text:
             return Response({"detail": "Transcription failed.", "error": err}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -318,8 +328,8 @@ class ConsultViewSet(viewsets.ModelViewSet):
             try:
                 prof = normalize_client_profile(consult.client)
                 history.append({"role": "system", "content": f"Client profile context: {prof}"})
-            except Exception:
-                pass
+            except Exception as e:
+                logging.getLogger(__name__).warning("Profile context inject failed: %s", e)
         history.extend({"role": m.role, "content": m.text} for m in consult.messages.all().order_by("created_at"))
         result = ai_respond(history)
 
@@ -355,9 +365,9 @@ class ConsultViewSet(viewsets.ModelViewSet):
                     with open(out_path, "wb") as f:
                         f.write(audio_bytes)
                     audio_url = self._signed_tts_url(name, expires_in=300)
-            except Exception:
+            except Exception as e:
                 # TTS failure is non-fatal
-                pass
+                logging.getLogger(__name__).warning("TTS generation failed: %s", e)
 
         return Response(
             {

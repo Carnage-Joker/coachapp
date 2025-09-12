@@ -1,4 +1,5 @@
-from rest_framework import viewsets, status
+import logging
+from rest_framework import viewsets, status, permissions, throttling
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
@@ -11,8 +12,17 @@ from .services.generator import generate_week_plan
 
 
 class ClientViewSet(viewsets.ModelViewSet):
-    queryset = Client.objects.all().order_by("-created_at")
     serializer_class = ClientSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [throttling.ScopedRateThrottle]
+    throttle_scope = "clients"
+
+    def get_queryset(self):
+        # Scope to requesting user
+        return Client.objects.filter(user=self.request.user).order_by("-created_at")
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
     @action(detail=True, methods=["get"], url_path="plan")
     def plan(self, request, pk=None):
@@ -34,8 +44,8 @@ class ClientViewSet(viewsets.ModelViewSet):
                 block = plan.get("plan") if isinstance(plan, dict) else None
                 if block:
                     ClientBlock.objects.create(client=client, name=name, block=block)
-            except Exception:
-                pass
+            except Exception as e:
+                logging.getLogger(__name__).warning("Failed to persist ClientBlock: %s", e)
         return Response(plan, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["post"], url_path="plan/save")
