@@ -29,6 +29,7 @@ class TimeStampedUUIDModel(models.Model):
 
 class Client(TimeStampedUUIDModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='clients', null=False, blank=False)
+    archived = models.BooleanField(default=False)
     first_name = models.CharField(max_length=80)
     last_name = models.CharField(max_length=80)
     preferred_name = models.CharField(max_length=80, blank=True)
