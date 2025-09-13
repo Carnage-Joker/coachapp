@@ -16,7 +16,7 @@ services:
 
   web:
     build: .
-    command: bash -lc "python -m pip install --upgrade pip && pip install -r requirements.txt && gunicorn coachapp.wsgi:application --bind 0.0.0.0:8000"
+    image: coachapp-web:staging
     environment:
       DJANGO_SETTINGS_MODULE: coachapp.settings_prod
       SECRET_KEY: change-me
@@ -29,6 +29,7 @@ services:
     volumes:
       - ./:/app
     working_dir: /app
+    command: ["/app/deploy/entrypoint.sh"]
 
   nginx:
     image: nginx:1.27-alpine
