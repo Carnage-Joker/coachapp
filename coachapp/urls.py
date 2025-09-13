@@ -16,6 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from coachapp.views_progress import ProgressView
 from .auth_views import ThrottledTokenObtainPairView, ThrottledTokenRefreshView, LogoutView
 
 urlpatterns = [
@@ -35,6 +36,7 @@ urlpatterns = [
     path('api/templates/', include('templates.urls')),
     path('api/rules/', include('rules.urls')),
     path('api/emails/', include('emails.urls')),
+    path('api/progress/', ProgressView.as_view(), name='progress'),
 ]
 
 

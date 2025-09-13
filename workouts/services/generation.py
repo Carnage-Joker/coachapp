@@ -24,6 +24,8 @@ class SessionParams:
     equipment: List[str]
     target_muscles: List[str]
     intensity: str | None = None
+    primary_count: int | None = None
+    accessory_count: int | None = None
 
 
 def _tempo_seconds_per_rep(goal: Goal) -> float:
@@ -171,6 +173,7 @@ def generate_session(params: SessionParams) -> Dict[str, Any]:
 
     # Main block: choose 2-3 primary patterns (squat/hinge/push/pull)
     primaries = []
+    max_prim = params.primary_count or 3
     for pattern in ("Squat", "Hinge", "Push", "Pull"):
         if lib.get(pattern):
             primaries.append({
@@ -180,35 +183,39 @@ def generate_session(params: SessionParams) -> Dict[str, Any]:
                 "rest_s": prof["main_rest"],
                 "pattern": pattern,
             })
-        if len(primaries) >= 3:
+        if len(primaries) >= max_prim:
             break
 
     # Accessory block: unilateral/core/carry based on library
     accessories = []
+    max_acc = params.accessory_count if isinstance(params.accessory_count, int) and params.accessory_count >= 0 else None
     if lib.get("Lunge"):
-        accessories.append({
-            "exercise": _pick(lib["Lunge"]),
-            "sets": prof["acc_sets"],
-            "reps": prof["acc_reps"],
-            "rest_s": prof["acc_rest"],
-            "pattern": "Unilateral",
-        })
+        if max_acc is None or len(accessories) < max_acc:
+            accessories.append({
+                "exercise": _pick(lib["Lunge"]),
+                "sets": prof["acc_sets"],
+                "reps": prof["acc_reps"],
+                "rest_s": prof["acc_rest"],
+                "pattern": "Unilateral",
+            })
     if lib.get("Core"):
-        accessories.append({
-            "exercise": _pick(lib["Core"]),
-            "sets": prof["acc_sets"],
-            "reps": 30 if params.goal in ("Endurance", "Weight Loss") else 12,
-            "rest_s": 45,
-            "pattern": "Core",
-        })
+        if max_acc is None or len(accessories) < max_acc:
+            accessories.append({
+                "exercise": _pick(lib["Core"]),
+                "sets": prof["acc_sets"],
+                "reps": 30 if params.goal in ("Endurance", "Weight Loss") else 12,
+                "rest_s": 45,
+                "pattern": "Core",
+            })
     if lib.get("Carry"):
-        accessories.append({
-            "exercise": _pick(lib["Carry"]),
-            "sets": 3,
-            "reps": 30,  # meters/seconds
-            "rest_s": 60,
-            "pattern": "Carry",
-        })
+        if max_acc is None or len(accessories) < max_acc:
+            accessories.append({
+                "exercise": _pick(lib["Carry"]),
+                "sets": 3,
+                "reps": 30,  # meters/seconds
+                "rest_s": 60,
+                "pattern": "Carry",
+            })
 
     # Finisher for conditioning-oriented goals
     finisher = None
@@ -299,6 +306,8 @@ def generate_plan(params: Dict[str, Any]) -> Dict[str, Any]:
         equipment=params.get("equipment", []),
         target_muscles=params.get("target_muscles", []),
         intensity=params.get("intensity"),
+        primary_count=(int(params.get("primary_count")) if str(params.get("primary_count", "")).isdigit() else None),
+        accessory_count=(int(params.get("accessory_count")) if str(params.get("accessory_count", "")).isdigit() else None),
     )
 
     plan: Dict[str, Any] = {"weeks": []}
@@ -319,6 +328,8 @@ def generate_plan(params: Dict[str, Any]) -> Dict[str, Any]:
                 equipment=base.equipment,
                 target_muscles=tm,
                 intensity=base.intensity,
+                primary_count=base.primary_count,
+                accessory_count=base.accessory_count,
             ))
             week["days"].append({"day": f"Week {w} Day {d}", "session": sess})
         plan["weeks"].append(week)

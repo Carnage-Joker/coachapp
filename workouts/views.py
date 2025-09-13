@@ -17,6 +17,8 @@ class GenerateWorkoutView(views.APIView):
                 equipment=list(data.get("equipment") or []),
                 target_muscles=list(data.get("target_muscles") or []),
                 intensity=data.get("intensity"),
+                primary_count=(int(data.get("primary_count")) if str(data.get("primary_count", "")).isdigit() else None),
+                accessory_count=(int(data.get("accessory_count")) if str(data.get("accessory_count", "")).isdigit() else None),
             )
         except Exception as e:
             return Response({"detail": f"Invalid input: {e}"}, status=status.HTTP_400_BAD_REQUEST)
