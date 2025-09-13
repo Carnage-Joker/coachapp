@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coachapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: coachapp
+  template:
+    metadata:
+      labels:
+        app: coachapp
+    spec:
+      containers:
+        - name: web
+          image: ghcr.io/OWNER/coachapp:staging
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DJANGO_SETTINGS_MODULE
+              value: coachapp.settings_prod
+            # These should be provided via a Secret in real deployments
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: coachapp-secrets
+                  key: SECRET_KEY
+            - name: ALLOWED_HOSTS
+              valueFrom:
+                secretKeyRef:
+                  name: coachapp-secrets
+                  key: ALLOWED_HOSTS
+            - name: CORS_ALLOWED_ORIGINS
+              valueFrom:
+                secretKeyRef:
+                  name: coachapp-secrets
+                  key: CORS_ALLOWED_ORIGINS
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: coachapp-secrets
+                  key: DATABASE_URL
+            - name: SENTRY_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: coachapp-secrets
+                  key: SENTRY_DSN
+          readinessProbe:
+            httpGet:
+              path: /admin/login/
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 20
+
