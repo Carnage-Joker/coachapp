@@ -13,6 +13,14 @@ Dev runbook (Windows):
   - copy .env.local.example .env.local
   - npm run dev
 
+Demo data seed (optional):
+
+- cd coachapp
+- .\.venv\Scripts\activate
+- python manage.py seed_demo --email trainer@example.com --password demo1234!
+
+Running the seed command provisions a coach user, a sample client with a saved plan, a consult thread, and an email log so the frontend pages render real data.
+
 Key endpoints
 
 - Auth (JWT): `POST /api/auth/token/`, `POST /api/auth/token/refresh/`

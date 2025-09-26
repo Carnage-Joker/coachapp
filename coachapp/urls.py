@@ -17,13 +17,21 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from coachapp.views_progress import ProgressView
-from .auth_views import ThrottledTokenObtainPairView, ThrottledTokenRefreshView, LogoutView
+from .auth_views import (
+    ThrottledTokenObtainPairView,
+    ThrottledTokenRefreshView,
+    RegisterView,
+    LogoutView,
+    CurrentUserView,
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('clients.urls')),  # mounts the clients app routes
     path('api/auth/token/', ThrottledTokenObtainPairView.as_view(),
          name='token_obtain_pair'),
+    path('api/auth/register/', RegisterView.as_view(), name='auth_register'),
+    path('api/auth/me/', CurrentUserView.as_view(), name='auth_me'),
     path('api/auth/token/refresh/',
          ThrottledTokenRefreshView.as_view(), name='token_refresh'),
     path('api/auth/logout/', LogoutView.as_view(), name='token_logout'),
@@ -38,6 +46,7 @@ urlpatterns = [
     path('api/emails/', include('emails.urls')),
     path('api/progress/', ProgressView.as_view(), name='progress'),
 ]
+
 
 
 

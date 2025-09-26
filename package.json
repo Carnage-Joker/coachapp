@@ -8,5 +8,19 @@
   },
   "devDependencies": {
     "concurrently": "^9.0.1"
+  },
+  "overrides": {
+    "react-day-picker@8.10.1": {
+      "peerDependencies": {
+        "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0",
+        "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0"
+      }
+    },
+    "react-day-picker": {
+      "peerDependencies": {
+        "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0",
+        "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0"
+      }
+    }
   }
 }

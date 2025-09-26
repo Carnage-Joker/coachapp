@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'clients.apps.ClientsConfig',
     'billing',
     'consults.apps.ConsultsConfig',
+    'coaches.apps.CoachesConfig',
     'exercises',
     'emails',
     'bookings',
