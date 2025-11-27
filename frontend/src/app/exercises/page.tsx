@@ -25,7 +25,7 @@ interface Exercise {
 }
 
 export default function ExercisesPage() {
-  const [exercises, setExercises] = useState<Exercise[]>([])
+  const [exercises] = useState<Exercise[]>([])
   const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedEquipment, setSelectedEquipment] = useState<string>('all')
