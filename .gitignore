@@ -161,5 +161,3 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-# Ignore embedded frontend repo
-frontend/
