@@ -25,7 +25,6 @@ def generate_balanced_week_plan(profile: Dict[str, Any]) -> Dict[str, List[Dict[
     days_per_week = int(profile.get("days_per_week", 3))
     session_len = int(profile.get("session_length_min", 60))
     skill = str(profile.get("skill_level", "Beginner"))
-    goals = profile.get("goals", [])
     allowed_equipment = set(profile.get("equipment_allowed", []))
     disliked = set(profile.get("disliked_exercises", []))
     require_knee = profile.get("require_knee_friendly", False)
