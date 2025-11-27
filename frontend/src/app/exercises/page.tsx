@@ -1,84 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 
-interface Exercise {
-  'Exercise ID': string
-  'Exercise': string
-  'Compound': string
-  'Movement Pattern': string
-  'Default Reps': string
-  'Default Sets': string
-  'Default Rest (s)': string
-  'Equipment': string
-  'Skill Level': string
-  'Target RPE': string
-  'Body Region': string
-  'Primary Muscle Group': string
-  'Coaching Cues': string
-  'Home-Friendly': string
-  'Outdoor-Friendly': string
-  'Knee-Friendly': string
-  'Shoulder-Friendly': string
-  'Back-Friendly': string
-}
-
 export default function ExercisesPage() {
-  const [exercises, setExercises] = useState<Exercise[]>([])
-  const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedEquipment, setSelectedEquipment] = useState<string>('all')
   const [selectedMovement, setSelectedMovement] = useState<string>('all')
   const [selectedLevel, setSelectedLevel] = useState<string>('all')
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    loadExercises()
-  }, [])
-
-  useEffect(() => {
-    filterExercises()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm, selectedEquipment, selectedMovement, selectedLevel, exercises])
-
-  const loadExercises = async () => {
-    try {
-      // In a real app, this would fetch from the API
-      // For now, we'll use the demo exercises and set them
-      setExercises([])
-      setIsLoading(false)
-    } catch (err) {
-      console.error('Failed to load exercises:', err)
-      setIsLoading(false)
-    }
-  }
-
-  const filterExercises = () => {
-    let filtered = exercises
-
-    if (searchTerm) {
-      filtered = filtered.filter(ex =>
-        ex.Exercise.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ex['Movement Pattern'].toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ex['Primary Muscle Group'].toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    }
-
-    if (selectedEquipment !== 'all') {
-      filtered = filtered.filter(ex => ex.Equipment === selectedEquipment)
-    }
-
-    if (selectedMovement !== 'all') {
-      filtered = filtered.filter(ex => ex['Movement Pattern'] === selectedMovement)
-    }
-
-    if (selectedLevel !== 'all') {
-      filtered = filtered.filter(ex => ex['Skill Level'] === selectedLevel)
-    }
-
-    setFilteredExercises(filtered)
-  }
 
   const equipmentOptions = ['Bodyweight', 'Dumbbells', 'Kettlebell', 'Barbell', 'Rings', 'Gym Equipment', 'Cable/Machine', 'Bands/Chains', 'Strongman', 'Med Ball', 'Cardio Machine']
   const movementOptions = ['Squat', 'Hinge', 'Horizontal Push', 'Horizontal Pull', 'Vertical Push', 'Vertical Pull', 'Lunge', 'Core – Brace/Anti-Extension', 'Carry/Gait', 'Jump/Power', 'Conditioning']
@@ -152,6 +81,28 @@ export default function ExercisesPage() {
       backFriendly: false,
     },
   ]
+
+  // Filter demo exercises based on user selections
+  const displayedExercises = demoExercises.filter(exercise => {
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase()
+      if (!exercise.name.toLowerCase().includes(term) &&
+          !exercise.pattern.toLowerCase().includes(term) &&
+          !exercise.muscle.toLowerCase().includes(term)) {
+        return false
+      }
+    }
+    if (selectedEquipment !== 'all' && exercise.equipment !== selectedEquipment) {
+      return false
+    }
+    if (selectedMovement !== 'all' && exercise.pattern !== selectedMovement) {
+      return false
+    }
+    if (selectedLevel !== 'all' && exercise.level !== selectedLevel) {
+      return false
+    }
+    return true
+  })
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-50 to-brand-100">
@@ -238,13 +189,13 @@ export default function ExercisesPage() {
           </div>
 
           <div className="text-sm text-gray-600">
-            Showing {demoExercises.length} exercises
+            Showing {displayedExercises.length} exercises
           </div>
         </div>
 
         {/* Exercise Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {demoExercises.map((exercise, idx) => (
+          {displayedExercises.map((exercise, idx) => (
             <div key={idx} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
               <div className="flex justify-between items-start mb-4">
                 <div>
