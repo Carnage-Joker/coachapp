@@ -138,9 +138,8 @@ def generate_balanced_week_plan(profile: Dict[str, Any]) -> Dict[str, List[Dict[
                 continue
                 
             # Find unused exercise from this pattern
-            available = [r for r in pool if r.get("Exercise") not in used_exercises]
-            if not available:
-                available = pool  # Reuse if necessary
+            available = [r for r in pool if r.get("Exercise") not in used_exercises] or pool  # Reuse if necessary
+
                 
             if not available:
                 continue
