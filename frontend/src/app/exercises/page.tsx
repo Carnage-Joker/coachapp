@@ -25,13 +25,13 @@ interface Exercise {
 }
 
 export default function ExercisesPage() {
-  const [exercises] = useState<Exercise[]>([])
+  const [exercises, setExercises] = useState<Exercise[]>([])
   const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedEquipment, setSelectedEquipment] = useState<string>('all')
   const [selectedMovement, setSelectedMovement] = useState<string>('all')
   const [selectedLevel, setSelectedLevel] = useState<string>('all')
-  const [loading, setLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     loadExercises()
@@ -39,21 +39,24 @@ export default function ExercisesPage() {
 
   useEffect(() => {
     filterExercises()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, selectedEquipment, selectedMovement, selectedLevel, exercises])
 
   const loadExercises = async () => {
     try {
       // In a real app, this would fetch from the API
-      // For now, we'll show a placeholder
-      setLoading(false)
+      // For now, we'll use the demo exercises and set them
+      setExercises([])
+      setIsLoading(false)
     } catch (err) {
       console.error('Failed to load exercises:', err)
-      setLoading(false)
+      setIsLoading(false)
     }
   }
 
   const filterExercises = () => {
     let filtered = exercises
+    setFilteredExercises(filtered)
 
     if (searchTerm) {
       filtered = filtered.filter(ex =>

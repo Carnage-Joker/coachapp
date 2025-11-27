@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useToast } from '@/components/ToastProvider'
 
 interface Exercise {
   name: string
@@ -30,6 +31,7 @@ interface Client {
 
 export default function PlansPage() {
   const router = useRouter()
+  const { showToast } = useToast()
   const [clients, setClients] = useState<Client[]>([])
   const [selectedClientId, setSelectedClientId] = useState<string>('')
   const [plan, setPlan] = useState<WorkoutPlan | null>(null)
@@ -111,9 +113,9 @@ export default function PlansPage() {
 
       if (!response.ok) throw new Error('Failed to save plan')
 
-      alert('Plan saved successfully!')
+      showToast('Plan saved successfully!', 'success')
     } catch (err: any) {
-      alert('Error: ' + err.message)
+      showToast('Error: ' + err.message, 'error')
     }
   }
 

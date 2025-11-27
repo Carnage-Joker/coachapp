@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useToast } from '@/components/ToastProvider'
 
 interface Client {
   id: string
@@ -19,6 +20,7 @@ interface Client {
 
 export default function DashboardPage() {
   const router = useRouter()
+  const { showToast } = useToast()
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -100,11 +102,10 @@ export default function DashboardPage() {
         throw new Error('Failed to generate plan')
       }
 
-      const plan = await response.json()
-      alert('Workout plan generated successfully!')
-      console.log('Plan:', plan)
+      await response.json()
+      showToast('Workout plan generated successfully!', 'success')
     } catch (err: any) {
-      alert('Error: ' + err.message)
+      showToast('Error: ' + err.message, 'error')
     }
   }
 
