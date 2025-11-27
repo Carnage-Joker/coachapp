@@ -238,11 +238,95 @@ export default function ExercisesPage() {
           </div>
 
           <div className="text-sm text-gray-600">
-            Showing {demoExercises.length} exercises
+            Showing {exercises.length > 0 ? filteredExercises.length : demoExercises.length} exercises
           </div>
         </div>
 
         {/* Exercise Cards */}
+        {isLoading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600"></div>
+          </div>
+        ) : exercises.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {filteredExercises.map((exercise, idx) => (
+            <div key={idx} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-1">{exercise.Exercise}</h3>
+                  <p className="text-sm text-gray-600">{exercise['Primary Muscle Group']}</p>
+                </div>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                  exercise['Skill Level'] === 'Beginner' ? 'bg-green-100 text-green-800' :
+                  exercise['Skill Level'] === 'Intermediate' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-red-100 text-red-800'
+                }`}>
+                  {exercise['Skill Level']}
+                </span>
+              </div>
+
+              <div className="flex flex-wrap gap-2 mb-4">
+                <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                  {exercise['Movement Pattern']}
+                </span>
+                <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                  {exercise.Equipment}
+                </span>
+                {exercise['Home-Friendly'] === 'Yes' && (
+                  <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-emerald-100 text-emerald-800">
+                    🏠 Home
+                  </span>
+                )}
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                <div className="flex justify-between text-sm">
+                  <div>
+                    <span className="text-gray-600">Sets:</span>
+                    <span className="font-medium text-gray-900 ml-1">{exercise['Default Sets']}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Reps:</span>
+                    <span className="font-medium text-gray-900 ml-1">{exercise['Default Reps']}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Rest:</span>
+                    <span className="font-medium text-gray-900 ml-1">{exercise['Default Rest (s)']}s</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold text-gray-700 mb-1">Coaching Cues:</h4>
+                <p className="text-sm text-gray-600 italic">{exercise['Coaching Cues']}</p>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {exercise['Knee-Friendly'] === 'Yes' && (
+                  <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-green-50 text-green-700">
+                    ✓ Knee Friendly
+                  </span>
+                )}
+                {exercise['Shoulder-Friendly'] === 'Yes' && (
+                  <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-green-50 text-green-700">
+                    ✓ Shoulder Friendly
+                  </span>
+                )}
+                {exercise['Shoulder-Friendly'] === 'No' && (
+                  <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-orange-50 text-orange-700">
+                    ⚠ Shoulder Caution
+                  </span>
+                )}
+                {exercise['Back-Friendly'] === 'No' && (
+                  <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-orange-50 text-orange-700">
+                    ⚠ Back Caution
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+        ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {demoExercises.map((exercise, idx) => (
             <div key={idx} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
@@ -321,6 +405,7 @@ export default function ExercisesPage() {
             </div>
           ))}
         </div>
+        )}
 
         <div className="mt-8 text-center">
           <p className="text-gray-600">
