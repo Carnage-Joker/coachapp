@@ -209,9 +209,11 @@ export default function ExercisesPage() {
             </div>
           </div>
 
+          {!isLoading && (
           <div className="text-sm text-gray-600">
             Showing {exercises.length > 0 ? filteredExercises.length : demoExercises.length} exercises
           </div>
+          )}
         </div>
 
         {/* Exercise Cards */}
