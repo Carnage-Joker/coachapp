@@ -56,7 +56,6 @@ export default function ExercisesPage() {
 
   const filterExercises = () => {
     let filtered = exercises
-    setFilteredExercises(filtered)
 
     if (searchTerm) {
       filtered = filtered.filter(ex =>
