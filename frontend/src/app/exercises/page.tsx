@@ -89,7 +89,7 @@ const demoExercisesData: DemoExercise[] = [
 ]
 
 export default function ExercisesPage() {
-  const [filteredExercises, setFilteredExercises] = useState<DemoExercise[]>(demoExercisesData)
+  const [filteredExercises, setFilteredExercises] = useState<DemoExercise[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedEquipment, setSelectedEquipment] = useState<string>('all')
   const [selectedMovement, setSelectedMovement] = useState<string>('all')
