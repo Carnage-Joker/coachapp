@@ -3,106 +3,127 @@
 import { useState } from 'react'
 import Link from 'next/link'
 
+interface DemoExercise {
+  name: string
+  pattern: string
+  equipment: string
+  level: string
+  muscle: string
+  sets: string
+  reps: string
+  rest: string
+  cues: string
+  homeFriendly?: boolean
+  kneeFriendly?: boolean
+  shoulderFriendly?: boolean
+  backFriendly?: boolean
+}
+
+// Demo exercises data
+const demoExercisesData: DemoExercise[] = [
+  {
+    name: 'Goblet Squat',
+    pattern: 'Squat',
+    equipment: 'Dumbbells',
+    level: 'Beginner',
+    muscle: 'Quadriceps',
+    sets: '3',
+    reps: '10',
+    rest: '60s',
+    cues: 'Keep chest up, elbows inside knees, weight on heels',
+    homeFriendly: true,
+    kneeFriendly: true,
+  },
+  {
+    name: 'Romanian Deadlift',
+    pattern: 'Hinge',
+    equipment: 'Dumbbells',
+    level: 'Beginner',
+    muscle: 'Hamstrings',
+    sets: '3',
+    reps: '8',
+    rest: '90s',
+    cues: 'Soft knees, hinge at hips, neutral spine, shoulders back',
+    homeFriendly: true,
+    backFriendly: false,
+  },
+  {
+    name: 'Push-Up',
+    pattern: 'Horizontal Push',
+    equipment: 'Bodyweight',
+    level: 'Beginner',
+    muscle: 'Chest',
+    sets: '3',
+    reps: '12',
+    rest: '60s',
+    cues: 'Hands under shoulders, tight core, full range, elbows 45°',
+    homeFriendly: true,
+    shoulderFriendly: false,
+  },
+  {
+    name: 'Inverted Row',
+    pattern: 'Horizontal Pull',
+    equipment: 'Rings',
+    level: 'Intermediate',
+    muscle: 'Back',
+    sets: '3',
+    reps: '10',
+    rest: '60s',
+    cues: 'Pull chest to bar, squeeze shoulder blades, control descent',
+    homeFriendly: true,
+    shoulderFriendly: true,
+  },
+  {
+    name: 'Plank',
+    pattern: 'Core – Brace/Anti-Extension',
+    equipment: 'Bodyweight',
+    level: 'Beginner',
+    muscle: 'Abs',
+    sets: '3',
+    reps: '30s hold',
+    rest: '45s',
+    cues: 'Straight line, tight core, squeeze glutes, neutral neck',
+    homeFriendly: true,
+    backFriendly: false,
+  },
+]
+
 export default function ExercisesPage() {
+  const [filteredExercises, setFilteredExercises] = useState<DemoExercise[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedEquipment, setSelectedEquipment] = useState<string>('all')
   const [selectedMovement, setSelectedMovement] = useState<string>('all')
   const [selectedLevel, setSelectedLevel] = useState<string>('all')
 
+  useEffect(() => {
+    let filtered = demoExercisesData
+
+    if (searchTerm) {
+      filtered = filtered.filter(ex =>
+        ex.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ex.pattern.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ex.muscle.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    }
+
+    if (selectedEquipment !== 'all') {
+      filtered = filtered.filter(ex => ex.equipment === selectedEquipment)
+    }
+
+    if (selectedMovement !== 'all') {
+      filtered = filtered.filter(ex => ex.pattern === selectedMovement)
+    }
+
+    if (selectedLevel !== 'all') {
+      filtered = filtered.filter(ex => ex.level === selectedLevel)
+    }
+
+    setFilteredExercises(filtered)
+  }, [searchTerm, selectedEquipment, selectedMovement, selectedLevel])
+
   const equipmentOptions = ['Bodyweight', 'Dumbbells', 'Kettlebell', 'Barbell', 'Rings', 'Gym Equipment', 'Cable/Machine', 'Bands/Chains', 'Strongman', 'Med Ball', 'Cardio Machine']
   const movementOptions = ['Squat', 'Hinge', 'Horizontal Push', 'Horizontal Pull', 'Vertical Push', 'Vertical Pull', 'Lunge', 'Core – Brace/Anti-Extension', 'Carry/Gait', 'Jump/Power', 'Conditioning']
   const levelOptions = ['Beginner', 'Intermediate', 'Advanced']
-
-  // Demo exercises for display
-  const demoExercises = [
-    {
-      name: 'Goblet Squat',
-      pattern: 'Squat',
-      equipment: 'Dumbbells',
-      level: 'Beginner',
-      muscle: 'Quadriceps',
-      sets: '3',
-      reps: '10',
-      rest: '60s',
-      cues: 'Keep chest up, elbows inside knees, weight on heels',
-      homeFriendly: true,
-      kneeFriendly: true,
-    },
-    {
-      name: 'Romanian Deadlift',
-      pattern: 'Hinge',
-      equipment: 'Dumbbells',
-      level: 'Beginner',
-      muscle: 'Hamstrings',
-      sets: '3',
-      reps: '8',
-      rest: '90s',
-      cues: 'Soft knees, hinge at hips, neutral spine, shoulders back',
-      homeFriendly: true,
-      backFriendly: false,
-    },
-    {
-      name: 'Push-Up',
-      pattern: 'Horizontal Push',
-      equipment: 'Bodyweight',
-      level: 'Beginner',
-      muscle: 'Chest',
-      sets: '3',
-      reps: '12',
-      rest: '60s',
-      cues: 'Hands under shoulders, tight core, full range, elbows 45°',
-      homeFriendly: true,
-      shoulderFriendly: false,
-    },
-    {
-      name: 'Inverted Row',
-      pattern: 'Horizontal Pull',
-      equipment: 'Rings',
-      level: 'Intermediate',
-      muscle: 'Back',
-      sets: '3',
-      reps: '10',
-      rest: '60s',
-      cues: 'Pull chest to bar, squeeze shoulder blades, control descent',
-      homeFriendly: true,
-      shoulderFriendly: true,
-    },
-    {
-      name: 'Plank',
-      pattern: 'Core – Brace/Anti-Extension',
-      equipment: 'Bodyweight',
-      level: 'Beginner',
-      muscle: 'Abs',
-      sets: '3',
-      reps: '30s hold',
-      rest: '45s',
-      cues: 'Straight line, tight core, squeeze glutes, neutral neck',
-      homeFriendly: true,
-      backFriendly: false,
-    },
-  ]
-
-  // Filter demo exercises based on user selections
-  const displayedExercises = demoExercises.filter(exercise => {
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase()
-      if (!exercise.name.toLowerCase().includes(term) &&
-          !exercise.pattern.toLowerCase().includes(term) &&
-          !exercise.muscle.toLowerCase().includes(term)) {
-        return false
-      }
-    }
-    if (selectedEquipment !== 'all' && exercise.equipment !== selectedEquipment) {
-      return false
-    }
-    if (selectedMovement !== 'all' && exercise.pattern !== selectedMovement) {
-      return false
-    }
-    if (selectedLevel !== 'all' && exercise.level !== selectedLevel) {
-      return false
-    }
-    return true
-  })
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-50 to-brand-100">
@@ -189,13 +210,13 @@ export default function ExercisesPage() {
           </div>
 
           <div className="text-sm text-gray-600">
-            Showing {displayedExercises.length} exercises
+            Showing {filteredExercises.length} exercises
           </div>
         </div>
 
         {/* Exercise Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {displayedExercises.map((exercise, idx) => (
+          {filteredExercises.map((exercise, idx) => (
             <div key={idx} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
               <div className="flex justify-between items-start mb-4">
                 <div>
