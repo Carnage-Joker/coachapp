@@ -89,7 +89,6 @@ const demoExercisesData: DemoExercise[] = [
 ]
 
 export default function ExercisesPage() {
-  const [exercises] = useState<DemoExercise[]>(demoExercisesData)
   const [filteredExercises, setFilteredExercises] = useState<DemoExercise[]>(demoExercisesData)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedEquipment, setSelectedEquipment] = useState<string>('all')
@@ -97,12 +96,7 @@ export default function ExercisesPage() {
   const [selectedLevel, setSelectedLevel] = useState<string>('all')
 
   useEffect(() => {
-    filterExercises()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm, selectedEquipment, selectedMovement, selectedLevel, exercises])
-
-  const filterExercises = () => {
-    let filtered = exercises
+    let filtered = demoExercisesData
 
     if (searchTerm) {
       filtered = filtered.filter(ex =>
@@ -125,7 +119,7 @@ export default function ExercisesPage() {
     }
 
     setFilteredExercises(filtered)
-  }
+  }, [searchTerm, selectedEquipment, selectedMovement, selectedLevel])
 
   const equipmentOptions = ['Bodyweight', 'Dumbbells', 'Kettlebell', 'Barbell', 'Rings', 'Gym Equipment', 'Cable/Machine', 'Bands/Chains', 'Strongman', 'Med Ball', 'Cardio Machine']
   const movementOptions = ['Squat', 'Hinge', 'Horizontal Push', 'Horizontal Pull', 'Vertical Push', 'Vertical Pull', 'Lunge', 'Core – Brace/Anti-Extension', 'Carry/Gait', 'Jump/Power', 'Conditioning']
