@@ -243,6 +243,11 @@ export default function ExercisesPage() {
         </div>
 
         {/* Exercise Cards */}
+        {isLoading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600"></div>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {demoExercises.map((exercise, idx) => (
             <div key={idx} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
@@ -321,6 +326,7 @@ export default function ExercisesPage() {
             </div>
           ))}
         </div>
+        )}
 
         <div className="mt-8 text-center">
           <p className="text-gray-600">
